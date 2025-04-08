@@ -17,7 +17,7 @@
 // specific language governing permissions and limitations
 // under the License.
 
-import ballerina/mime;
+import ballerina/http;
 import ballerina/url;
 
 type SimpleBasicType string|boolean|int|float|decimal;
@@ -75,11 +75,11 @@ isolated function getFormStyleRequest(string parent, record {} anyRecord, boolea
     string[] recordArray = [];
     if explode {
         foreach [string, anydata] [key, value] in anyRecord.entries() {
-            if (value is SimpleBasicType) {
+            if value is SimpleBasicType {
                 recordArray.push(key, "=", getEncodedUri(value.toString()));
-            } else if (value is SimpleBasicType[]) {
+            } else if value is SimpleBasicType[] {
                 recordArray.push(getSerializedArray(key, value, explode = explode));
-            } else if (value is record {}) {
+            } else if value is record {} {
                 recordArray.push(getFormStyleRequest(parent, value, explode));
             }
             recordArray.push("&");
@@ -87,11 +87,11 @@ isolated function getFormStyleRequest(string parent, record {} anyRecord, boolea
         _ = recordArray.pop();
     } else {
         foreach [string, anydata] [key, value] in anyRecord.entries() {
-            if (value is SimpleBasicType) {
+            if value is SimpleBasicType {
                 recordArray.push(key, ",", getEncodedUri(value.toString()));
-            } else if (value is SimpleBasicType[]) {
+            } else if value is SimpleBasicType[] {
                 recordArray.push(getSerializedArray(key, value, explode = false));
-            } else if (value is record {}) {
+            } else if value is record {} {
                 recordArray.push(getFormStyleRequest(parent, value, explode));
             }
             recordArray.push(",");
@@ -111,23 +111,23 @@ isolated function getFormStyleRequest(string parent, record {} anyRecord, boolea
 isolated function getSerializedArray(string arrayName, anydata[] anyArray, string style = "form", boolean explode = true) returns string {
     string key = arrayName;
     string[] arrayValues = [];
-    if (anyArray.length() > 0) {
-        if (style == FORM && !explode) {
+    if anyArray.length() > 0 {
+        if style == FORM && !explode {
             arrayValues.push(key, "=");
             foreach anydata i in anyArray {
                 arrayValues.push(getEncodedUri(i.toString()), ",");
             }
-        } else if (style == SPACEDELIMITED && !explode) {
+        } else if style == SPACEDELIMITED && !explode {
             arrayValues.push(key, "=");
             foreach anydata i in anyArray {
                 arrayValues.push(getEncodedUri(i.toString()), "%20");
             }
-        } else if (style == PIPEDELIMITED && !explode) {
+        } else if style == PIPEDELIMITED && !explode {
             arrayValues.push(key, "=");
             foreach anydata i in anyArray {
                 arrayValues.push(getEncodedUri(i.toString()), "|");
             }
-        } else if (style == DEEPOBJECT) {
+        } else if style == DEEPOBJECT {
             foreach anydata i in anyArray {
                 arrayValues.push(key, "[]", "=", getEncodedUri(i.toString()), "&");
             }
@@ -157,7 +157,7 @@ isolated function getSerializedRecordArray(string parent, record {}[] value, str
             arayIndex = arayIndex + 1;
         }
     } else {
-        if (!explode) {
+        if !explode {
             serializedArray.push(parent, "=");
         }
         foreach var recordItem in value {
@@ -174,7 +174,7 @@ isolated function getSerializedRecordArray(string parent, record {}[] value, str
 # + return - Encoded string
 isolated function getEncodedUri(anydata value) returns string {
     string|error encoded = url:encode(value.toString(), "UTF8");
-    if (encoded is string) {
+    if encoded is string {
         return encoded;
     } else {
         return value.toString();
@@ -187,21 +187,22 @@ isolated function getEncodedUri(anydata value) returns string {
 # + encodingMap - Details on serialization mechanism
 # + return - Returns generated Path or error at failure of client initialization
 isolated function getPathForQueryParam(map<anydata> queryParam, map<Encoding> encodingMap = {}) returns string|error {
+    map<anydata> queriesMap = http:getQueryMap(queryParam);
     string[] param = [];
-    if (queryParam.length() > 0) {
+    if queriesMap.length() > 0 {
         param.push("?");
-        foreach var [key, value] in queryParam.entries() {
+        foreach var [key, value] in queriesMap.entries() {
             if value is () {
-                _ = queryParam.remove(key);
+                _ = queriesMap.remove(key);
                 continue;
             }
             Encoding encodingData = encodingMap.hasKey(key) ? encodingMap.get(key) : defaultEncoding;
-            if (value is SimpleBasicType) {
+            if value is SimpleBasicType {
                 param.push(key, "=", getEncodedUri(value.toString()));
-            } else if (value is SimpleBasicType[]) {
+            } else if value is SimpleBasicType[] {
                 param.push(getSerializedArray(key, value, encodingData.style, encodingData.explode));
-            } else if (value is record {}) {
-                if (encodingData.style == DEEPOBJECT) {
+            } else if value is record {} {
+                if encodingData.style == DEEPOBJECT {
                     param.push(getDeepObjectStyleRequest(key, value));
                 } else {
                     param.push(getFormStyleRequest(key, value, encodingData.explode));
@@ -215,38 +216,4 @@ isolated function getPathForQueryParam(map<anydata> queryParam, map<Encoding> en
     }
     string restOfPath = string:'join("", ...param);
     return restOfPath;
-}
-
-isolated function createBodyParts(record {|anydata...;|} anyRecord, map<Encoding> encodingMap = {}) returns mime:Entity[]|error {
-    mime:Entity[] entities = [];
-    foreach [string, anydata] [key, value] in anyRecord.entries() {
-        Encoding encodingData = encodingMap.hasKey(key) ? encodingMap.get(key) : {};
-        mime:Entity entity = new mime:Entity();
-        if value is record {byte[] fileContent; string fileName;} {
-            entity.setContentDisposition(mime:getContentDispositionObject(string `form-data; name=${key};  filename=${value.fileName}`));
-            entity.setByteArray(value.fileContent);
-        } else if value is byte[] {
-            entity.setContentDisposition(mime:getContentDispositionObject(string `form-data; name=${key};`));
-            entity.setByteArray(value);
-        } else if value is SimpleBasicType|SimpleBasicType[] {
-            entity.setContentDisposition(mime:getContentDispositionObject(string `form-data; name=${key};`));
-            entity.setText(value.toString());
-        } else if value is record {}|record {}[] {
-            entity.setContentDisposition(mime:getContentDispositionObject(string `form-data; name=${key};`));
-            entity.setJson(value.toJson());
-        }
-        if (encodingData?.contentType is string) {
-            check entity.setContentType(encodingData?.contentType.toString());
-        }
-        map<any>? headers = encodingData?.headers;
-        if (headers is map<any>) {
-            foreach var [headerName, headerValue] in headers.entries() {
-                if headerValue is SimpleBasicType {
-                    entity.setHeader(headerName, headerValue.toString());
-                }
-            }
-        }
-        entities.push(entity);
-    }
-    return entities;
 }
