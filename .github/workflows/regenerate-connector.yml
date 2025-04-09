@@ -148,6 +148,7 @@ jobs:
           mv aligned_ballerina_openapi.${{ env.EXTENSION}} openapi.${{ env.EXTENSION}}
 
       - name: Generate OpenAPI change report
+        working-directory: docs/spec
         run: |
             echo "Generating OpenAPI change report..."
             openapi-changes html-report openapi_old.${{ env.EXTENSION}} openapi.${{ env.EXTENSION}}
