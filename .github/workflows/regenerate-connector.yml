@@ -129,7 +129,7 @@ jobs:
           file=$(echo openapi.*)
           ext="${file##*.}"
           echo "EXTENSION=$ext" >> "$GITHUB_ENV"
-          cp openapi.${{ env.EXTENSION}} openapi_old.${{ env.EXTENSION}}
+          cp openapi.$ext openapi_old.$ext
 
       - name: Flatten OpenAPI Specification
         if: ${{ inputs.flatten-openapi }}
