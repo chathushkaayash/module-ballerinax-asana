@@ -1,7 +1,7 @@
 name: Regenerate OpenAPI Connectors Template
 
 on:
-  workflow_call:
+  workflow_dispatch:
     inputs:
       openapi-url:
         description: "URL of the OpenAPI JSON"
@@ -161,8 +161,8 @@ jobs:
 
       - name: Configure Git Identity
         run: |
-          git config user.name "ballerina-bot"
-          git config user.email "ballerina-bot@ballerina.org"
+          git config user.name "chathushkaayash"
+          git config user.email "chathushkaayash@ballerina.org"
 
       - name: Remove Downloaded Ballerina Distribution
         if: ${{ inputs.distribution-zip }}
