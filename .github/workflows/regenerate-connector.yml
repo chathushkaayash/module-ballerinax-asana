@@ -216,7 +216,7 @@ jobs:
         run: |
           prUrl=$(gh pr create \
             --title "[Automated] Regenerate OpenAPI Connector" \
-            --body $'Automated regeneration of the OpenAPI-based Ballerina connector.\n\nFor OpenAPI specification changes, please view the artifacts listed under the "Summary > Artifacts" section of this workflow run.'
+            --body $'Automated regenerate of the OpenAPI-based Ballerina connector.\n\nFollow the steps to view the OpenAPI changes:\n1. Copy the following URL\nhttps://github.com/ballerina-platform/${{github.event.repository.name}}/blob/regenerate-openapi-connector-1/docs/spec/openapi.${{ env.EXTENSION}}\n\n2. Visit [pb33f OpenAPI Changes](https://pb33f.io/openapi-changes/demo/) and provide the above URL as the GitHub URL.'
             --base ${{ github.ref }} \
             --head automated/regenerate-connector)
           echo "prUrl=$prUrl" >> $GITHUB_OUTPUT
