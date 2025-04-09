@@ -150,9 +150,14 @@ jobs:
       - name: Generate OpenAPI change report
         working-directory: docs/spec
         run: |
-            echo "Generating OpenAPI change report..."
-            openapi-changes html-report openapi_old.${{ env.EXTENSION}} openapi.${{ env.EXTENSION}}
-            cat ./report.html >> $GITHUB_STEP_SUMMARY
+          echo "Generating OpenAPI change report..."
+          openapi-changes html-report openapi_old.${{ env.EXTENSION}} openapi.${{ env.EXTENSION}}
+
+      - name: Upload Artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: openapi-changes-report
+          path: docs/spec/report.html
 
       - name: Generate Ballerina Code
         working-directory: docs/spec
