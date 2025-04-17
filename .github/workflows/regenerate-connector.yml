@@ -234,13 +234,12 @@ jobs:
       - name: Merge PR
         if: ${{ steps.commitFiles.outputs.hasChanged == 'true' && inputs.auto-merge == true }}
         run: |
-          gh pr view ${{ steps.createPR.outputs.prUrl }} --json statusCheckRollup --jq '.statusCheckRollup[].name'
           checkCount="0"
           while [ "$checkCount" != "1" ]
           do
             sleep 20
-            checkCount=$(gh pr view ${{ steps.createPR.outputs.prUrl }} --jq '[.statusCheckRollup[] | select((.conclusion=="SUCCESS") and ((.name=="Build on Ubuntu")))] | length' --json statusCheckRollup)
-            failedCount=$(gh pr view ${{ steps.createPR.outputs.prUrl }} --jq '[.statusCheckRollup[] | select((.conclusion=="FAILURE") and ((.name=="Build on Ubuntu")))] | length' --json statusCheckRollup)
+            checkCount=$(gh pr view ${{ steps.createPR.outputs.prUrl }} --jq '[.statusCheckRollup[] | select((.conclusion=="SUCCESS") and ((.name=="Run PR Build Workflow / Build")))] | length' --json statusCheckRollup)
+            failedCount=$(gh pr view ${{ steps.createPR.outputs.prUrl }} --jq '[.statusCheckRollup[] | select((.conclusion=="FAILURE") and ((.name=="Run PR Build Workflow / Build")))] | length' --json statusCheckRollup)
             if [[ "$failedCount" != "0" ]]
             then
               echo "PR Build has Failed"
