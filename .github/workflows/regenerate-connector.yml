@@ -234,6 +234,7 @@ jobs:
       - name: Merge PR
         if: ${{ steps.commitFiles.outputs.hasChanged == 'true' && inputs.auto-merge == true }}
         run: |
+          gh pr view ${{ steps.createPR.outputs.prUrl }} --json statusCheckRollup --jq '.statusCheckRollup[].name'
           checkCount="0"
           while [ "$checkCount" != "1" ]
           do
