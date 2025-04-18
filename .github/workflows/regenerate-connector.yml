@@ -234,15 +234,24 @@ jobs:
       - name: Merge PR
         if: ${{ steps.commitFiles.outputs.hasChanged == 'true' && inputs.auto-merge == true }}
         run: |
+          max_retries=100
+          retry_count=0
+
           while true
           do
             sleep 20
+            ((retry_count++))
+
             result=$(gh pr view ${{ steps.createPR.outputs.prUrl }} \
               --jq '[.statusCheckRollup[] | select((.name == "Run PR Build Workflow / Build") and (.status == "COMPLETED"))][0]' \
               --json statusCheckRollup)
 
             if [[ -z "$result" ]]; then
-              echo "Waiting for PR Build Workflow to complete..."
+              echo "[$retry_count/$max_retries] Waiting for PR Build Workflow to complete..."
+              if [[ $retry_count -ge $max_retries ]]; then
+                echo "Timeout waiting for PR Build Workflow to complete."
+                exit 1
+              fi
               continue
             fi
 
@@ -255,6 +264,7 @@ jobs:
               exit 1
             fi
           done
+
           sleep 20
           gh pr merge --merge --delete-branch
         env:
