@@ -263,12 +263,12 @@ jobs:
             fi
           done
 
-          if [[ $retry_count -eq $max_retries ]]; then
+          if [[ $retry_count -ge $max_retries ]]; then
             echo "Reached max retry limit ($max_retries). Workflow did not complete in time."
             exit 1
           fi
 
-          sleep 20
+          sleep 5
           gh pr merge --merge --delete-branch
         env:
           GITHUB_TOKEN: ${{ secrets.BALLERINA_BOT_TOKEN }}
