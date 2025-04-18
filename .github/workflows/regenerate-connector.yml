@@ -236,12 +236,15 @@ jobs:
         run: |
           max_retries=100
           retry_count=0
+          echo "Test 0"
 
           while [[ $retry_count -lt $max_retries ]]
           do
+            echo "Test 1"
             sleep 20
             ((retry_count++))
-
+            
+            echo "Test 2"
             echo "[$retry_count/$max_retries] Checking PR Build Workflow status..."
 
             result=$(gh pr view ${{ steps.createPR.outputs.prUrl }} \
