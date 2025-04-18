@@ -242,9 +242,10 @@ jobs:
           do
             echo "Test 1"
             sleep 20
-            ((retry_count++))
-            
             echo "Test 2"
+            retry_count=$((retry_count + 1))
+            
+            echo "Test 3"
             echo "[$retry_count/$max_retries] Checking PR Build Workflow status..."
 
             result=$(gh pr view ${{ steps.createPR.outputs.prUrl }} \
